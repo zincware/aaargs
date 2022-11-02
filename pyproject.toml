@@ -1,0 +1,44 @@
+[tool.poetry]
+name = "aaargs"
+version = "0.1.0"
+description = "autocompletion and argument parsing"
+authors = ["zincwarecode <zincwarecode@gmail.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+zninit = "^0.1.1"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+black = "^22.10.0"
+isort = "^5.10.1"
+ruff = "^0.0.94"
+coverage = "^6.5.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+preview = true
+
+[tool.coverage.run]
+relative_files = true
+branch = true
+# omit the tests themselves
+omit = ["*/tests/*", "*/tmp/*", "*/interface/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:"
+]
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "coverage_html_report"
