@@ -121,3 +121,59 @@ def test_create_instance():
     parser = Parser(filename="my_file")
     assert parser.filename == "my_file"
     assert parser.encoding == "utf-8"
+
+
+@pytest.mark.parametrize("annotation", (bool, "bool"))  # test future implementation.
+def test_store_true(annotation):
+    class Parser(ArgumentParser):
+        name: str = Argument()
+        verbose: annotation = Argument()
+
+    parser = Parser.parse_args(["someone", "--verbose"])
+    assert parser.verbose
+    assert parser.name == "someone"
+
+    parser = Parser.parse_args(["someone"])
+    assert not parser.verbose
+    assert parser.name == "someone"
+
+    with pytest.raises(TypeError):
+
+        class Parser(ArgumentParser):
+            name: str = Argument()
+            verbose: annotation = Argument(positional=True)  # must not be positional
+
+    with pytest.raises(AttributeError):
+
+        class Parser(ArgumentParser):
+            name: str = Argument()
+            verbose: annotation = Argument("--verb")
+
+        Parser.parse_args(["someone"])
+
+    class Parser(ArgumentParser):
+        name: str = Argument()
+        verbose: annotation = Argument("--verbose")
+
+    parser = Parser.parse_args(["someone", "--verbose"])
+    assert parser.verbose
+    assert parser.name == "someone"
+
+    parser = Parser.parse_args(["someone"])
+    assert not parser.verbose
+    assert parser.name == "someone"
+
+    class Parser(ArgumentParser):
+        name: str = Argument()
+        verbose: annotation = Argument(default=True)
+
+    parser = Parser.parse_args(["someone"])
+    assert parser.verbose
+    assert parser.name == "someone"
+
+
+def test_wrong_annotations():
+    with pytest.raises(ValueError):
+
+        class Parser(ArgumentParser):
+            name: bool = Argument(default="someone")

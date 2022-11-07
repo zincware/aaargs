@@ -1,5 +1,4 @@
-"""The aaargs library to help with autocompletion and argparse library"""
-
+"""The aaargs library to help with attribute autocompletion and argparse library"""
 import argparse
 import typing
 
@@ -85,7 +84,7 @@ class ArgumentParser(zninit.ZnInit):
             ]
             raise AttributeError(
                 f"Arguments '{argument_names}' not in '{args}'. Check that the"
-                f" attribute names '{argument_names}' matche the argparse names. E.g."
+                f" attribute names {argument_names} match the argparse names. E.g."
                 " 'filename = Argument(--filename)'."
             ) from err
 
@@ -106,7 +105,7 @@ class Argument(zninit.Descriptor):
         nargs=None,
         required=None,
         type=None,
-        positional=True,
+        positional=None,
     ):
         """Replace the argparse.ArgumentParser.add_argument method.
 
@@ -155,11 +154,36 @@ class Argument(zninit.Descriptor):
 
         >>> class MyArgs(ArgumentParser):
         >>>     filename = Argument()
+        >>>     verbose: bool = Argument()
 
         which will define a positional argument without defining 'name_or_flags'.
         When using 'positional=False' it will be converted to a keyword only argument.
+        Futhermore, it allows for boolean arguments without defining 'positional=False'
+        or 'action=store_true' explicitly.
 
         """
+        if (
+            self.owner.__annotations__.get(self.name) in ["bool", bool]
+            and self.kwargs.get("action") is None
+        ):
+            self.kwargs["action"] = "store_true"
+            if len(self.name_or_flags) == 0:
+                if self.positional:
+                    raise TypeError(
+                        "Can not use boolean annotation with positional only Argument"
+                        f" '{self.name}'"
+                    )
+                if self.default not in (True, False, zninit.Empty):
+                    raise ValueError(
+                        f"Default value for boolean argument '{self.name}' can only be"
+                        f" boolean, not '{self.default}'"
+                    )
+                self.name_or_flags = (f"--{self.name}",)
+
+        if self.positional is None:
+            self.positional = True
+
         if len(self.name_or_flags) == 0:
             self.name_or_flags = (self.name if self.positional else f"--{self.name}",)
+
         return super().__get__(instance, owner)
