@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-zninit = "^0.1.1"
+zninit = "^0.1.2"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -17,6 +17,9 @@ black = "^22.10.0"
 isort = "^5.10.1"
 ruff = "^0.0.94"
 coverage = "^6.5.0"
+
+[tool.poetry.urls]
+repository = "https://github.com/zincware/aaargs"
 
 [build-system]
 requires = ["poetry-core"]
