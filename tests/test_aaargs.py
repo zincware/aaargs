@@ -2,7 +2,12 @@ import argparse
 
 import pytest
 
+import aaargs
 from aaargs import Argument, ArgumentParser
+
+
+def test_version():
+    assert aaargs.__version__ == "0.1.1"
 
 
 def test_subinit_kwargs():

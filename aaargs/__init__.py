@@ -1,8 +1,11 @@
 """The aaargs library to help with attribute autocompletion and argparse library"""
 import argparse
+import importlib.metadata
 import typing
 
 import zninit
+
+__version__ = importlib.metadata.version("aaargs")
 
 
 class ArgumentParser(zninit.ZnInit):

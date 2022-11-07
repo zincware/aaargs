@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aaargs"
-version = "0.1.0"
+version = "0.1.1"
 description = "autocompletion and argument parsing"
 authors = ["zincwarecode <zincwarecode@gmail.com>"]
 license = "Apache-2.0"
