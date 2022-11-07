@@ -101,7 +101,7 @@ class Argument(zninit.Descriptor):
         action=None,
         choices=None,
         const=None,
-        default=None,
+        default=zninit.Empty,
         dest=None,
         help=None,
         metavar=None,
@@ -120,10 +120,9 @@ class Argument(zninit.Descriptor):
             argument, if no name_or_flags are provided.
 
         """
-        if default is not None:
-            super().__init__(default=default)
-        else:
-            super().__init__()
+        if not required and default is zninit.Empty:
+            default = None
+        super().__init__(default=default)
         self.name_or_flags = name_or_flags
         self.positional = positional
 
@@ -176,7 +175,7 @@ class Argument(zninit.Descriptor):
                         "Can not use boolean annotation with positional only Argument"
                         f" '{self.name}'"
                     )
-                if self.default not in (True, False, zninit.Empty):
+                if self.default not in (True, False, None, zninit.Empty):
                     raise ValueError(
                         f"Default value for boolean argument '{self.name}' can only be"
                         f" boolean, not '{self.default}'"

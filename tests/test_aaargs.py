@@ -7,7 +7,7 @@ from aaargs import Argument, ArgumentParser
 
 
 def test_version():
-    assert aaargs.__version__ == "0.1.2"
+    assert aaargs.__version__ == "0.1.3"
 
 
 def test_subinit_kwargs():
@@ -121,8 +121,9 @@ def test_create_instance():
         filename = Argument()
         encoding = Argument(positional=False, default="utf-8")
 
-    with pytest.raises(TypeError):
-        _ = Parser()
+    parser = Parser()
+    assert parser.filename is None
+
     parser = Parser(filename="my_file")
     assert parser.filename == "my_file"
     assert parser.encoding == "utf-8"
@@ -182,3 +183,23 @@ def test_wrong_annotations():
 
         class Parser(ArgumentParser):
             name: bool = Argument(default="someone")
+
+
+def test_required():
+    class Parser(ArgumentParser):
+        name: str = Argument(required=False, default=None)
+
+    parser = Parser()
+    assert parser.name is None
+
+    class Parser(ArgumentParser):
+        name: str = Argument(required=False)
+
+    parser = Parser()
+    assert parser.name is None
+
+    class Parser(ArgumentParser):
+        name: str = Argument(required=True)
+
+    with pytest.raises(TypeError):
+        parser = Parser()
