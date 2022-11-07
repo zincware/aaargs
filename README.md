@@ -62,6 +62,8 @@ args = MyParser.parse_args(
 
 print(args)
 >>> MyParser(count='3', debug=True, encoding='utf-8', filename='README.md', verbose=False)
+print(args.encoding) # this will autocomplete 🎉
+>>> "utf-8"
 ```
 
 You can also create a Parser using keyword arguments if you prefer (I don't):
