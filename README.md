@@ -40,14 +40,14 @@ class MyParser(ArgumentParser):
     epilog = "Text at the bottom of help"
 
     # You can define arguments directly
-    filename = Argument()  # positional argument
-    encoding = Argument(positional=False)  # keyword argument '--encoding'
+    filename = Argument(positional=True)  # positional argument
+    encoding = Argument()  # keyword argument '--encoding'
     
     # or pass the 'name_or_flags' argument
     count = Argument("-c", "--count")
     verbose = Argument("-v", "--verbose", action="store_true")
     
-    # for boolean types annotations are also supported
+    # annotations are also supported for boolean arguments
     debug: bool = Argument() # --debug with action="store_true"
 
 parser: argparse.ArgumentParser = MyParser.get_parser()

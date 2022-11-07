@@ -7,7 +7,7 @@ from aaargs import Argument, ArgumentParser
 
 
 def test_version():
-    assert aaargs.__version__ == "0.1.1"
+    assert aaargs.__version__ == "0.1.2"
 
 
 def test_subinit_kwargs():
@@ -41,14 +41,14 @@ def test_get_parser():
 def test_parse_args():
     class Parser(ArgumentParser):
         description = "Lorem Ipsum"
-        filename = Argument()
+        filename = Argument(positional=True)
 
     args = Parser.parse_args(["myfile"])
     assert args.filename == "myfile"
 
     class Parser(ArgumentParser):
         description = "Lorem Ipsum"
-        filename = Argument()
+        filename = Argument(positional=True)
         encoding = Argument("-e", "--encoding")
 
     args = Parser.parse_args(["myfile", "-e", "utf-8"])
@@ -61,7 +61,7 @@ def test_parse_args():
 
     class Parser(ArgumentParser):
         description = "Lorem Ipsum"
-        filename = Argument()
+        filename = Argument(positional=True)
         e = Argument("-e")
 
     args = Parser.parse_args(["myfile", "-e", "utf-8"])
@@ -131,7 +131,7 @@ def test_create_instance():
 @pytest.mark.parametrize("annotation", (bool, "bool"))  # test future implementation.
 def test_store_true(annotation):
     class Parser(ArgumentParser):
-        name: str = Argument()
+        name: str = Argument(positional=True)
         verbose: annotation = Argument()
 
     parser = Parser.parse_args(["someone", "--verbose"])
@@ -151,13 +151,13 @@ def test_store_true(annotation):
     with pytest.raises(AttributeError):
 
         class Parser(ArgumentParser):
-            name: str = Argument()
+            name: str = Argument(positional=True)
             verbose: annotation = Argument("--verb")
 
         Parser.parse_args(["someone"])
 
     class Parser(ArgumentParser):
-        name: str = Argument()
+        name: str = Argument(positional=True)
         verbose: annotation = Argument("--verbose")
 
     parser = Parser.parse_args(["someone", "--verbose"])
@@ -169,7 +169,7 @@ def test_store_true(annotation):
     assert parser.name == "someone"
 
     class Parser(ArgumentParser):
-        name: str = Argument()
+        name: str = Argument(positional=True)
         verbose: annotation = Argument(default=True)
 
     parser = Parser.parse_args(["someone"])

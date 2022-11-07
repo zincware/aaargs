@@ -108,7 +108,7 @@ class Argument(zninit.Descriptor):
         nargs=None,
         required=None,
         type=None,
-        positional=None,
+        positional=False,
     ):
         """Replace the argparse.ArgumentParser.add_argument method.
 
@@ -182,9 +182,6 @@ class Argument(zninit.Descriptor):
                         f" boolean, not '{self.default}'"
                     )
                 self.name_or_flags = (f"--{self.name}",)
-
-        if self.positional is None:
-            self.positional = True
 
         if len(self.name_or_flags) == 0:
             self.name_or_flags = (self.name if self.positional else f"--{self.name}",)
