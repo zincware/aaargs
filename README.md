@@ -6,7 +6,7 @@
 
 I'm not a huge fan of the [argparse](https://docs.python.org/3/library/argparse.html) library that ships with Python.
 Personally, I much prefer  [typer](https://typer.tiangolo.com/) or [click](https://click.palletsprojects.com/).
-But `argparse` is often used so this is my approach in bringing at least autocompletion to the argparse library.
+But `argparse` is often used so this is my approach in bringing at least **a**ttribute **a**utocompletion to the **arg**parse library.
 
 Let us take a look at the official documentation and use their examples:
 
@@ -46,6 +46,9 @@ class MyParser(ArgumentParser):
     # or pass the 'name_or_flags' argument
     count = Argument("-c", "--count")
     verbose = Argument("-v", "--verbose", action="store_true")
+    
+    # for boolean types annotations are also supported
+    debug: bool = Argument() # --debug with action="store_true"
 
 parser: argparse.ArgumentParser = MyParser.get_parser()
 args: MyParser = MyParser.parse_args()
@@ -54,11 +57,11 @@ args: MyParser = MyParser.parse_args()
 You can also print the parser just like the original:
 ```python
 args = MyParser.parse_args(
-        ["README.md", "--encoding", "utf-8", "-c", "3"]
+        ["README.md", "--encoding", "utf-8", "-c", "3", "--debug"]
     )
 
 print(args)
->>> MyParser(count='3', encoding='utf-8', filename='README.md', verbose=False)
+>>> MyParser(count='3', debug=True, encoding='utf-8', filename='README.md', verbose=False)
 ```
 
 You can also create a Parser using keyword arguments if you prefer (I don't):
