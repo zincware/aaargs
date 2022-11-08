@@ -1,5 +1,6 @@
 """The aaargs library to help with attribute autocompletion and argparse library"""
 import argparse
+import dataclasses
 import importlib.metadata
 import typing
 
@@ -27,9 +28,9 @@ class ArgumentParser(zninit.ZnInit):
     def __init_subclass__(cls, **kwargs):
         """Allow adding arguments through subclass creation"""
         super().__init_subclass__()
-        for key in kwargs:
+        for key, value in kwargs.items():
             if key in dir(cls):
-                setattr(cls, key, kwargs[key])
+                setattr(cls, key, value)
             else:
                 raise AttributeError(f"Class {cls} has no attribute '{key}'.")
         return cls
@@ -56,7 +57,7 @@ class ArgumentParser(zninit.ZnInit):
         arguments: typing.List[Argument] = cls._get_descriptors()
 
         for argument in arguments:
-            parser.add_argument(*argument.name_or_flags, **argument.kwargs)
+            parser.add_argument(*argument.name_or_flags, **argument.options.get_dict())
 
         return parser
 
@@ -92,6 +93,28 @@ class ArgumentParser(zninit.ZnInit):
             ) from err
 
 
+@dataclasses.dataclass
+class _ArgumentOptions:
+    action: typing.Any
+    choices: typing.Any
+    const: typing.Any
+    default: typing.Any
+    dest: typing.Any
+    help: typing.Any
+    metavar: typing.Any
+    nargs: typing.Any
+    required: bool
+    type: typing.Any
+
+    def get_dict(self) -> dict:
+        """Get a dict of all value pairs that are not None"""
+        return {
+            key.name: getattr(self, key.name)
+            for key in dataclasses.fields(self)
+            if getattr(self, key.name) is not None
+        }
+
+
 class Argument(zninit.Descriptor):
     """An argparse argument."""
 
@@ -120,34 +143,58 @@ class Argument(zninit.Descriptor):
             argument, if no name_or_flags are provided.
 
         """
-        if not required and default is zninit.Empty:
+        if required:
+            if default in (zninit.Empty, None):
+                default = zninit.Empty
+            else:
+                raise TypeError(
+                    "When using 'required=True' the argument 'default' must be None"
+                )
+        elif default is zninit.Empty:
             default = None
         super().__init__(default=default)
         self.name_or_flags = name_or_flags
         self.positional = positional
 
-        self.kwargs = {}
+        self.options = _ArgumentOptions(
+            action=action,
+            choices=choices,
+            const=const,
+            default=default,
+            dest=dest,
+            help=help,
+            metavar=metavar,
+            nargs=nargs,
+            required=required,
+            type=type,
+        )
 
-        if action is not None:
-            self.kwargs["action"] = action
-        if choices is not None:
-            self.kwargs["choices"] = choices
-        if const is not None:
-            self.kwargs["const"] = const
-        if default is not None:
-            self.kwargs["default"] = default
-        if dest is not None:
-            self.kwargs["dest"] = dest
-        if help is not None:
-            self.kwargs["help"] = help
-        if metavar is not None:
-            self.kwargs["metavar"] = metavar
-        if nargs is not None:
-            self.kwargs["nargs"] = nargs
-        if required is not None:
-            self.kwargs["required"] = required
-        if type is not None:
-            self.kwargs["type"] = type
+        self._check_input()
+
+    def _check_input(self):
+        if self.options.required and self.positional:
+            raise TypeError("'required' is an invalid argument for positionals`")
+
+    @property
+    def _is_boolean(self) -> bool:
+        """Check type annotations if Argument is defined as boolean"""
+        return self.owner.__annotations__.get(self.name) in ["bool", bool]
+
+    def _handle_boolean_annotation(self):
+        if self._is_boolean and self.options.action is None:
+            self.options.action = "store_true"
+            if len(self.name_or_flags) == 0:
+                if self.positional:
+                    raise TypeError(
+                        "Can not use boolean annotation with positional only Argument"
+                        f" '{self.name}'"
+                    )
+                if self.default not in (True, False, None, zninit.Empty):
+                    raise ValueError(
+                        f"Default value for boolean argument '{self.name}' can only be"
+                        f" boolean, not '{self.default}'"
+                    )
+                self.name_or_flags = (f"--{self.name}",)
 
     def __get__(self, instance, owner=None):
         """Get method of the descriptor
@@ -164,25 +211,12 @@ class Argument(zninit.Descriptor):
         or 'action=store_true' explicitly.
 
         """
-        if (
-            self.owner.__annotations__.get(self.name) in ["bool", bool]
-            and self.kwargs.get("action") is None
-        ):
-            self.kwargs["action"] = "store_true"
-            if len(self.name_or_flags) == 0:
-                if self.positional:
-                    raise TypeError(
-                        "Can not use boolean annotation with positional only Argument"
-                        f" '{self.name}'"
-                    )
-                if self.default not in (True, False, None, zninit.Empty):
-                    raise ValueError(
-                        f"Default value for boolean argument '{self.name}' can only be"
-                        f" boolean, not '{self.default}'"
-                    )
-                self.name_or_flags = (f"--{self.name}",)
+        self._handle_boolean_annotation()
 
         if len(self.name_or_flags) == 0:
             self.name_or_flags = (self.name if self.positional else f"--{self.name}",)
+
+        if self._is_boolean and self.default in (None, zninit.Empty):
+            self._default = False
 
         return super().__get__(instance, owner)

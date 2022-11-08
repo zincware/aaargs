@@ -45,6 +45,7 @@ def test_parse_args():
 
     args = Parser.parse_args(["myfile"])
     assert args.filename == "myfile"
+    assert Parser(filename="myfile").filename == "myfile"
 
     class Parser(ArgumentParser):
         description = "Lorem Ipsum"
@@ -52,6 +53,9 @@ def test_parse_args():
         encoding = Argument("-e", "--encoding")
 
     args = Parser.parse_args(["myfile", "-e", "utf-8"])
+    assert args.filename == "myfile"
+    assert args.encoding == "utf-8"
+    args = Parser(filename="myfile", encoding="utf-8")
     assert args.filename == "myfile"
     assert args.encoding == "utf-8"
 
@@ -67,6 +71,9 @@ def test_parse_args():
     args = Parser.parse_args(["myfile", "-e", "utf-8"])
     assert args.filename == "myfile"
     assert args.e == "utf-8"
+    args = Parser(filename="myfile", e="utf-8")
+    assert args.filename == "myfile"
+    assert args.e == "utf-8"
 
 
 def test_parse_args_with_defaults():
@@ -76,6 +83,8 @@ def test_parse_args_with_defaults():
 
     args = Parser.parse_args("")
     assert args.filename == "myfile.txt"
+
+    assert Parser().filename == "myfile.txt"
 
 
 def test_args_positional():
@@ -162,12 +171,15 @@ def test_store_true(annotation):
         verbose: annotation = Argument("--verbose")
 
     parser = Parser.parse_args(["someone", "--verbose"])
-    assert parser.verbose
+    assert parser.verbose is True
     assert parser.name == "someone"
 
     parser = Parser.parse_args(["someone"])
-    assert not parser.verbose
+    assert parser.verbose is False
     assert parser.name == "someone"
+
+    assert Parser().verbose is False
+    assert Parser(verbose=True).verbose is True
 
     class Parser(ArgumentParser):
         name: str = Argument(positional=True)
@@ -186,6 +198,11 @@ def test_wrong_annotations():
 
 
 def test_required():
+    with pytest.raises(TypeError):
+        # required is invalid for positionals
+        class Parser(ArgumentParser):
+            name: str = Argument(positional=True, required=True)
+
     class Parser(ArgumentParser):
         name: str = Argument(required=False, default=None)
 
@@ -202,4 +219,4 @@ def test_required():
         name: str = Argument(required=True)
 
     with pytest.raises(TypeError):
-        parser = Parser()
+        _ = Parser()
